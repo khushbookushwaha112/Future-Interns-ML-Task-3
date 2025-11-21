@@ -1,72 +1,58 @@
 import streamlit as st
 import pandas as pd
-from openai import OpenAI
+from transformers import pipeline
 
-# ------------------------------
-# SET YOUR OPENAI API KEY HERE
-# ------------------------------
-client = OpenAI(api_key="YOUR_API_KEY_HERE")
+# ----------------------------
+# Load HuggingFace Model
+# ----------------------------
+chat_model = pipeline("text-generation", model="distilgpt2")
 
-# ------------------------------
-# STREAMLIT APP TITLE
-# ------------------------------
-st.title("💬 Customer Support Chatbot")
-st.write("This AI-powered chatbot answers customer support questions using a Kaggle dataset.")
+# ----------------------------
+# Streamlit Title
+# ----------------------------
+st.title("💬 Customer Support Chatbot (AI-Powered)")
+st.write("This chatbot uses an AI model + FAQ dataset to answer customer support questions.")
 
-# ------------------------------
-# LOAD DATASET
-# ------------------------------
+# ----------------------------
+# Load Dataset
+# ----------------------------
 try:
     data = pd.read_csv("dataset/customer_support_cleaned.csv")
 except:
-    st.error("Dataset not found! Make sure 'dataset/customer_support_cleaned.csv' exists.")
+    st.error("❌ Dataset missing! Please add 'dataset/customer_support_cleaned.csv'")
     st.stop()
 
-# ------------------------------
-# CONVERT DATA INTO FAQ TEXT
-# ------------------------------
+# ----------------------------
+# Convert Dataset to FAQ Text
+# ----------------------------
 faq_text = ""
-for index, row in data.iterrows():
+for _, row in data.iterrows():
     faq_text += f"Q: {row['question']}\nA: {row['answer']}\n\n"
 
-# ------------------------------
-# FUNCTION TO GENERATE RESPONSE
-# ------------------------------
-def get_response(user_query):
-    prompt = f"""
-You are a customer support assistant.
-Use the FAQ dataset below to respond:
+# ----------------------------
+# Chatbot Logic
+# ----------------------------
+def ai_answer(user_query):
+    prompt = (
+        "You are a polite and helpful customer support assistant.\n\n"
+        "Here is the company's FAQ knowledge base:\n"
+        f"{faq_text}\n\n"
+        f"User Question: {user_query}\n"
+        "Answer the user based on the FAQs or general customer support knowledge.\n"
+    )
 
-FAQ Knowledge Base:
-{faq_text}
+    ai_output = chat_model(prompt, max_length=200, num_return_sequences=1)
+    return ai_output[0]["generated_text"]
 
-User question: {user_query}
+# ----------------------------
+# Text Input
+# ----------------------------
+user_input = st.text_input("Ask your customer support question:")
 
-If the answer is not available in the dataset,
-try to give the best helpful customer-support reply.
-"""
-
-    try:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": "You are a helpful support assistant."},
-                {"role": "user", "content": prompt}
-            ]
-        )
-        return response.choices[0].message["content"]
-    except Exception as e:
-        return f"❌ Error: {e}"
-
-# ------------------------------
-# INPUT BOX
-# ------------------------------
-user_input = st.text_input("Ask a customer support question:")
-
-# ------------------------------
-# SHOW CHATBOT RESPONSE
-# ------------------------------
+# ----------------------------
+# Display Answer
+# ----------------------------
 if user_input:
-    answer = get_response(user_input)
-    st.write("### 🤖 Chatbot Response:")
-    st.write(answer)
+    response = ai_answer(user_input)
+    st.subheader("🤖 Chatbot Response:")
+    st.write(response)

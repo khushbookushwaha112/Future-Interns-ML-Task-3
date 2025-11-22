@@ -5,7 +5,7 @@ This chatbot uses a free HuggingFace AI model + Kaggle dataset to answer custome
 ---
 
 # 🚀 Live Demo (Streamlit URL)
-👉 **Deployed App:** *(Paste your Streamlit Cloud URL here)*  
+👉 **Deployed App:** *(https://future-interns-ml-task-3-ajcj5gm6bwuw4daymechkp.streamlit.app/)*  
 
 
 ---

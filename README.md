@@ -43,5 +43,5 @@ No API key required and 100% free.
 
 ---
 
-## 📂 Repository Structure
+
 
